@@ -3,7 +3,14 @@
 {% block title %}Hello WordController!{% endblock %}
 
 {% block body %}
+    {% block body %}
+        {% for type, flash in app.flashes %}
+            {% for message in flash %}
+                <span class="{{ type }}">{{ message }}</span>
+            {% endfor %}
+        {% endfor %}
     <form action="{{ path('word_check') }}">
+        <input type="text" name="letter">
         <button>Check</button>
     </form>
     <form action="{{ path('word_replay') }}">

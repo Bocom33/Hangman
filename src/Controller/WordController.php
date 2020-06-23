@@ -6,6 +6,7 @@ use App\Entity\Game;
 use App\Repository\GameRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 /**
  * @Route("/word", name="word_")
@@ -14,18 +15,27 @@ class WordController extends AbstractController
 {
     /**
      * @Route("/check", name="check")
+     * @param GameRepository $gameRepository
+     * @param EntityManagerInterface $entityManager
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
      */
-    public function check(GameRepository $gameRepository, EntityManagerInterface $entityManager)
+    public function check(Request $request, $gameRepository, EntityManagerInterface $entityManager)
     {
         $game = $gameRepository->findOneBy([]);
+        $letter = $request->query->get('letter');
+        $wordLetters = str_split($game->getWord()->getWord());
         $win  = false;
-        //TODO Determinate if $win is true or false according to the letter typed by the user
-        if ($win) {
-
+        if (in_array($letter, $wordLetters)) {
+            $win = true;
+            $this->addFlash('success', 'Bien joué !');
+        }
+        if ($win === true) {
+            return $this->redirectToRoute('word_word');
         } else {
             $game->setStep($game->getStep() +1);
             $entityManager->persist($game);
             $entityManager->flush();
+            $this->addFlash('danger', 'Tu feras mieux la prochaine fois !');
         }
         return $this->redirectToRoute('word_word');
     }
