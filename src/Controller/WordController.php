@@ -3,9 +3,12 @@
 namespace App\Controller;
 
 use App\Entity\Game;
+use App\Entity\Letter;
 use App\Repository\GameRepository;
+use App\Repository\LetterRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 /**
@@ -17,21 +20,31 @@ class WordController extends AbstractController
      * @Route("/check", name="check")
      * @param GameRepository $gameRepository
      * @param EntityManagerInterface $entityManager
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      */
-    public function check(Request $request, $gameRepository, EntityManagerInterface $entityManager)
+    public function check(Request $request, GameRepository $gameRepository, EntityManagerInterface $entityManager)
     {
         $game = $gameRepository->findOneBy([]);
-        $letter = $request->query->get('letter');
+        $letterTypedByUser = $request->query->get('letter');
+
+        $letter = new Letter();
+        $letter->setLetter($letterTypedByUser);
+
         $wordLetters = str_split($game->getWord()->getWord());
         $win  = false;
-        if (in_array($letter, $wordLetters)) {
+        if (in_array($letterTypedByUser, $wordLetters)) {
             $win = true;
-            $this->addFlash('success', 'Bien joué !');
         }
         if ($win === true) {
+            $letter->setIsInTheWord($win);
+            $entityManager->persist($letter);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Bien joué !');
             return $this->redirectToRoute('word_word');
         } else {
+            $letter->setIsInTheWord($win);
+            $entityManager->persist($letter);
             $game->setStep($game->getStep() +1);
             $entityManager->persist($game);
             $entityManager->flush();
@@ -55,11 +68,13 @@ class WordController extends AbstractController
     /**
      * @Route("/word", name="word")
      */
-    public function index(GameRepository $gameRepository)
+    public function index(GameRepository $gameRepository, LetterRepository $letterRepository)
     {
+        $letters = $letterRepository->findBy(['isInTheWord' => false]);
         $game = $gameRepository->findOneBy([]);
         return $this->render('word/index.html.twig', [
             'game' => $game,
+            'letters' => $letters,
         ]);
     }
 }
