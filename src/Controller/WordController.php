@@ -6,6 +6,7 @@ use App\Entity\Game;
 use App\Entity\Letter;
 use App\Repository\GameRepository;
 use App\Repository\LetterRepository;
+use App\Services\LetterManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -22,7 +23,11 @@ class WordController extends AbstractController
      * @param EntityManagerInterface $entityManager
      * @return RedirectResponse
      */
-    public function check(Request $request, GameRepository $gameRepository, EntityManagerInterface $entityManager)
+    public function check(
+        Request $request,
+        GameRepository $gameRepository,
+        EntityManagerInterface $entityManager
+)
     {
         $game = $gameRepository->findOneBy([]);
         $letterTypedByUser = $request->query->get('letter');
@@ -68,13 +73,21 @@ class WordController extends AbstractController
     /**
      * @Route("/word", name="word")
      */
-    public function index(GameRepository $gameRepository, LetterRepository $letterRepository)
+    public function index(GameRepository $gameRepository, LetterRepository $letterRepository, LetterManager $letterManager)
     {
         $letters = $letterRepository->findBy(['isInTheWord' => false]);
         $game = $gameRepository->findOneBy([]);
+
+        $lettersTrue = $letterRepository->findBy(['isInTheWord' => true]);
+
+        $word = $game->getWord()->getWord();
+        $wordLettersResult = $letterManager->wordAppareance($word, $lettersTrue);
+
+
         return $this->render('word/index.html.twig', [
             'game' => $game,
             'letters' => $letters,
+            'wordLettersResult' => $wordLettersResult,
         ]);
     }
 }

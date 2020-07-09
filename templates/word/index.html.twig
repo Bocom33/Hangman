@@ -8,6 +8,8 @@
                 <span class="{{ type }}">{{ message }}</span>
             {% endfor %}
         {% endfor %}
+
+
     <form action="{{ path('word_check') }}">
         <input type="text" name="letter">
         <button>Check</button>
@@ -17,9 +19,13 @@
     <li>
         {{ letter.letter }}
     </li>
-
     {% endfor %}
     </ul>
+
+    {% for letterResult in wordLettersResult %}
+        {{ letterResult }}
+    {% endfor %}
+
     <form action="{{ path('word_replay') }}">
         <button>Replay</button>
     </form>
@@ -53,6 +59,7 @@
     {% if game.step == 10 %}
     <img id="stick10" src="https://i.imgur.com/Icr7LoK.png">
     {% endif %}
+
 
 {% endblock %}
 
