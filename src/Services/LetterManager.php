@@ -26,4 +26,13 @@ class LetterManager
         return $result;
     }
 
+    public function hasWonWord($letters, $word){
+        dump(implode($letters), $word);
+        if ($word === implode($letters)) {
+            $hasWon = true;
+        } else {
+            $hasWon = false;
+        }
+        return $hasWon;
+    }
 }

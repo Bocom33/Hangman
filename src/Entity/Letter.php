@@ -49,9 +49,9 @@ class Letter
         return $this->isInTheWord;
     }
 
-    public function setIsInTheWord(bool $issInTheWord): self
+    public function setIsInTheWord(bool $isInTheWord): self
     {
-        $this->isInTheWord = $issInTheWord;
+        $this->isInTheWord = $isInTheWord;
 
         return $this;
     }

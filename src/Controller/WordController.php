@@ -4,8 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Game;
 use App\Entity\Letter;
+use App\Entity\Word;
 use App\Repository\GameRepository;
 use App\Repository\LetterRepository;
+use App\Repository\WordRepository;
 use App\Services\LetterManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,7 +28,9 @@ class WordController extends AbstractController
     public function check(
         Request $request,
         GameRepository $gameRepository,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        LetterManager $letterManager,
+        LetterRepository $letterRepository
 )
     {
         $game = $gameRepository->findOneBy([]);
@@ -46,6 +50,12 @@ class WordController extends AbstractController
             $entityManager->flush();
 
             $this->addFlash('success', 'Bien joué !');
+
+            $wordAppareance = $letterManager->wordAppareance($game->getWord()->getWord(), $letterRepository->findAll());
+            if ($letterManager->hasWonWord($wordAppareance, $game->getWord()->getWord())) {
+                $this->addFlash('success', 'Bravo, tu as gagné !');
+            }
+
             return $this->redirectToRoute('word_word');
         } else {
             $letter->setIsInTheWord($win);
@@ -54,6 +64,7 @@ class WordController extends AbstractController
             $entityManager->persist($game);
             $entityManager->flush();
             $this->addFlash('danger', 'Tu feras mieux la prochaine fois !');
+
         }
         return $this->redirectToRoute('word_word');
     }
@@ -61,10 +72,22 @@ class WordController extends AbstractController
     /**
      * @Route("/replay", name="replay")
      */
-    public function replay(GameRepository $gameRepository, EntityManagerInterface $entityManager)
+    public function replay(GameRepository $gameRepository,
+                           EntityManagerInterface $entityManager,
+                           WordRepository $wordRepository,
+                           LetterRepository $letterRepository)
     {
         $game = $gameRepository->findOneBy([]);
-        $game->setStep(0);
+        $words = $wordRepository->findAll();
+        shuffle($words);
+        $word = $words[0];
+        $game->setStep(0)->setWord($word);
+
+        $letters = $letterRepository->findAll();
+        foreach ($letters as $letter) {
+            $entityManager->remove($letter);
+        }
+
         $entityManager->persist($game);
         $entityManager->flush();
         return $this->redirectToRoute('word_word');

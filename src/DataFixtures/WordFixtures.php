@@ -17,8 +17,6 @@ class WordFixtures extends Fixture
     ];
     public function load(ObjectManager $manager)
     {
-        // $product = new Product();
-        // $manager->persist($product);
         $i = 0;
         foreach (self::WORDS as $wordToGuess => $indication) {
             $word = new Word();
